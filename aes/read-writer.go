@@ -15,7 +15,7 @@ func Encrypt(input io.Reader, output io.Writer, keyStr string) error {
 	if err != nil {
 		return err
 	} else if len(in) == 0 {
-		return errors.New("invalid input of len 0")
+		return errors.New("invalid input with len 0")
 	}
 	key := stringToKey(keyStr)
 	encData, err := encrypt(in, key)
@@ -35,7 +35,7 @@ func Decrypt(input io.Reader, output io.Writer, keyStr string) error {
 	if err != nil {
 		return err
 	} else if len(in) == 0 {
-		return errors.New("invalid input of len 0")
+		return errors.New("invalid input with len 0")
 	}
 
 	key := stringToKey(keyStr)
