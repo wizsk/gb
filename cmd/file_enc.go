@@ -1,4 +1,6 @@
-package main
+//go:build exclude
+
+package cmd
 
 import (
 	"fmt"
@@ -9,11 +11,12 @@ import (
 	"time"
 
 	"github.com/wizsk/gb/aes"
+	"github.com/wizsk/gb/config"
 	"golang.org/x/term" // for sequre pass input
 )
 
 // name mane file name
-func (c *Config) openEncrypted(filename string) error {
+func openEncrypted(c *config.Config, filename string) error {
 	// create the tmp dir
 	decFile, err := os.CreateTemp(c.RootDir, strings.TrimLeft(filename, ".md.enc")+"-*.md")
 	if err != nil {
@@ -31,7 +34,7 @@ func (c *Config) openEncrypted(filename string) error {
 	}()
 
 	// decrypt file
-	err = aes.DecryptFile(c.fullEncFilePath(filename), decFile.Name(), c.Key)
+	err = aes.DecryptFile(c.FullEncFilePath(filename), decFile.Name(), c.Key)
 	if err != nil {
 		return err
 	}
@@ -41,11 +44,11 @@ func (c *Config) openEncrypted(filename string) error {
 		return err
 	}
 
-	return aes.EncryptFile(decFile.Name(), c.fullEncFilePath(filename), c.Key)
+	return aes.EncryptFile(decFile.Name(), c.FullEncFilePath(filename), c.Key)
 }
 
-func (c *Config) createNewFile(fileName string) error {
-	if _, err := os.Stat(filepath.Join(c.RootDir, c.addEncExt(fileName))); err == nil {
+func createNewFile(c *config.Config, fileName string) error {
+	if _, err := os.Stat(filepath.Join(c.RootDir, c.AddEncExt(fileName))); err == nil {
 		return fmt.Errorf("createNewFile: %q already exists", fileName)
 	}
 
@@ -80,7 +83,7 @@ func (c *Config) createNewFile(fileName string) error {
 		return fmt.Errorf("createNewFile: noting was written to the file %q", fileName)
 	}
 
-	return aes.EncryptFile(tf.Name(), c.fullEncFilePath(fileName), c.Key)
+	return aes.EncryptFile(tf.Name(), c.FullEncFilePath(fileName), c.Key)
 }
 
 func openEditor(file, editor string) error {
