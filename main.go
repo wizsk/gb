@@ -11,22 +11,26 @@ import (
 var tempFile string
 
 func main() {
-	// fmt.Println(os.UserConfigDir())
-	// fmt.Println(os.UserCacheDir())
-	// os.Exit(0)
 	closeSig := make(chan struct{})
 	go shutdown(closeSig)
 
 	fl := os.Args[1]
-	key := "hi man"
 
-	err := createNewFile("tmp", fl, "nvim", key)
-	if err != nil {
-		fmt.Println(err)
-		return
+	c := Config{
+		RootDir: "tmp",
+		encExt:  ".md.enc",
+		decExt:  ".md",
+		Key:     "123",
+		Editor:  "nvim",
 	}
 
-	err = openEncrypted("tmp", fl, "nvim", key)
+	// err := c.createNewFile(fl)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	err := c.openEncrypted(fl)
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -13,13 +13,9 @@ import (
 )
 
 // name mane file name
-func openEncrypted(directory, name, editor, key string) error {
-	if directory == "" || name == "" {
-		return fmt.Errorf("openEncyped: directory name or file name is empty")
-	}
-
+func (c *Config) openEncrypted(filename string) error {
 	// create the tmp dir
-	decFile, err := os.CreateTemp(directory, strings.TrimLeft(name, ".md.enc")+"-*.md")
+	decFile, err := os.CreateTemp(c.RootDir, strings.TrimLeft(filename, ".md.enc")+"-*.md")
 	if err != nil {
 		return err
 	}
@@ -35,33 +31,29 @@ func openEncrypted(directory, name, editor, key string) error {
 	}()
 
 	// decrypt file
-	err = aes.DecryptFile(filepath.Join(directory, name+".md.enc"), decFile.Name(), key)
+	err = aes.DecryptFile(c.fullEncFilePath(filename), decFile.Name(), c.Key)
 	if err != nil {
 		return err
 	}
 
-	err = openEditor(decFile.Name(), editor)
+	err = openEditor(decFile.Name(), c.Editor)
 	if err != nil {
 		return err
 	}
 
-	return aes.EncryptFile(decFile.Name(), filepath.Join(directory, name+".md.enc"), key)
+	return aes.EncryptFile(decFile.Name(), c.fullEncFilePath(filename), c.Key)
 }
 
-func createNewFile(dir, fileName, editor, key string) error {
-	if _, err :=os.Stat(filepath.Join(dir, fileName+".md.enc")); err == nil {
+func (c *Config) createNewFile(fileName string) error {
+	if _, err := os.Stat(filepath.Join(c.RootDir, c.addEncExt(fileName))); err == nil {
 		return fmt.Errorf("createNewFile: %q already exists", fileName)
-	}
-
-	if dir == "" {
-		return fmt.Errorf("createNewFile: directory name is empty")
 	}
 
 	if fileName == "" {
 		fileName = time.Now().Format("03-04-05-PM-05-06-2006")
 	}
 
-	tf, err := os.CreateTemp(dir, fileName+"-*.md")
+	tf, err := os.CreateTemp(c.RootDir, fileName+"-*.md")
 	if err != nil {
 		return err
 	}
@@ -75,7 +67,7 @@ func createNewFile(dir, fileName, editor, key string) error {
 		}
 	}()
 
-	if err = openEditor(tf.Name(), editor); err != nil {
+	if err = openEditor(tf.Name(), c.Editor); err != nil {
 		return err
 	}
 
@@ -88,7 +80,7 @@ func createNewFile(dir, fileName, editor, key string) error {
 		return fmt.Errorf("createNewFile: noting was written to the file %q", fileName)
 	}
 
-	return aes.EncryptFile(tf.Name(), filepath.Join(dir, fileName+".md.enc"), key)
+	return aes.EncryptFile(tf.Name(), c.fullEncFilePath(fileName), c.Key)
 }
 
 func openEditor(file, editor string) error {
