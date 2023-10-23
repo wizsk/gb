@@ -8,8 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func readconf() (*Config, error) {
-	root, err := rootDir()
+func Readconf() (*Config, error) {
+	root, err := RootDir()
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func readconf() (*Config, error) {
 	return &conf, nil
 }
 
-func rootDir() (string, error) {
+func RootDir() (string, error) {
 	var root string
 	if root = os.Getenv(rootDirEnvName); root == "" {
 		var err error
