@@ -9,9 +9,9 @@ import (
 )
 
 func TestReadconf(t *testing.T) {
-	os.Setenv(rootDirEnvName, "./tmp")
-	r := os.Getenv(rootDirEnvName)
-	os.Mkdir(r, os.ModePerm)
+	os.Setenv(RootDirEnvName, "./tmp")
+	r := os.Getenv(RootDirEnvName)
+	_ = os.Mkdir(r, os.ModePerm)
 
 	df := DefaultConf()
 	d, err := yaml.Marshal(df)
@@ -19,8 +19,8 @@ func TestReadconf(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	os.WriteFile(filepath.Join(r, configFileName), d, 0666)
-	c, err := readconf()
+	_ = os.WriteFile(filepath.Join(r, ConfigFileName), d, 0666)
+	c, err := Readconf()
 	if err != nil {
 		t.Fatal(err)
 	}

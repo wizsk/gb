@@ -24,7 +24,7 @@ func Readconf() (*Config, error) {
 		return nil, fmt.Errorf("readconf: home dir for gb %q is not a dir", root)
 	}
 
-	confFile, err := os.ReadFile(filepath.Join(root, configFileName))
+	confFile, err := os.ReadFile(filepath.Join(root, ConfigFileName))
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func Readconf() (*Config, error) {
 
 func RootDir() (string, error) {
 	var root string
-	if root = os.Getenv(rootDirEnvName); root == "" {
+	if root = os.Getenv(RootDirEnvName); root == "" {
 		var err error
 		root, err = os.UserHomeDir()
 		if err != nil {

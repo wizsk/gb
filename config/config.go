@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	rootDirEnvName = "GB_ROOT_DIR"
-	configFileName = "config.yml"
-	defautRoot     = "GB_ROOT_DIR"
+	ConfigFileName = "config.yml"
+	RootDirEnvName = "GB_ROOT_DIR"
+
 	encExt         = ".md.enc"
 	decExt         = ".md"
 	editor         = "nvim"
@@ -26,7 +26,6 @@ func DefaultConf() Config {
 		encExt: encExt,
 		decExt: decExt,
 		Editor: editor,
-		Key:    "",
 	}
 }
 
