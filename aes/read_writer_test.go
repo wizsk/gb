@@ -9,15 +9,15 @@ import (
 
 func TestEDPass(t *testing.T) {
 	tests := []struct {
-		key string
+		key []byte
 		msg []byte
 	}{
 		{
-			key: "key",
+			key: StringToHash("key"),
 			msg: []byte("very important msg that no one else should see"),
 		},
 		{
-			key: "u wont ever know the keyyyy",
+			key: StringToHash("u wont ever know the keyyyy"),
 			msg: []byte("very important msg that no one else should see, ya u can't"),
 		},
 	}
@@ -46,27 +46,27 @@ func TestEDPass(t *testing.T) {
 
 func TestEDFail(t *testing.T) {
 	tests := []struct {
-		key  string
-		dkey string
+		key  []byte
+		dkey []byte
 		msg  []byte
 		err  error // encyption err
 		drr  error // decyption err
 	}{
 		// encryption err
 		{
-			key: "",
+			key: []byte{},
 			msg: []byte("very important msg that no one else should see"),
 			err: errors.New("fo"),
 		},
 		{
-			key: "u wont ever know the keyyyy",
+			key: StringToHash("u wont ever know the keyyyy"),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		// decription err
 		{
-			key:  "yo",
-			dkey: "yoxxx",
+			key:  StringToHash("yo"),
+			dkey: StringToHash("yoxxx"),
 			msg:  []byte("very important msg that no one else should see"),
 			drr:  errors.New("fo"),
 		},

@@ -1,13 +1,17 @@
+// aes is helper package for gb cli app
+//
+// It encypts and decrypts the files with aes and GCM
 package aes
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
 	"io"
 )
 
+// encrypt takes ina input and key as []bytes
+// then returns the encrypted output as []byte, or error
 func encrypt(input, key []byte) ([]byte, error) {
 	// Create a new Cipher Block from the key
 	block, err := aes.NewCipher(key)
@@ -57,9 +61,4 @@ func decrypt(enc, key []byte) ([]byte, error) {
 		return nil, err
 	}
 	return decripted, nil
-}
-
-func stringToKey(s string) []byte {
-	b32 := sha256.Sum256([]byte(s))
-	return b32[:]
 }

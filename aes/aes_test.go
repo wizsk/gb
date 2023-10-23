@@ -11,11 +11,11 @@ func TestAESPass(t *testing.T) {
 		key, msg []byte
 	}{
 		{
-			key: stringToKey("key"),
+			key: StringToHash("key"),
 			msg: []byte("very important msg that no one else should see"),
 		},
 		{
-			key: stringToKey("u wont ever know the keyyyy"),
+			key: StringToHash("u wont ever know the keyyyy"),
 			msg: []byte("very important msg that no one else should see, ya u can't"),
 		},
 	}
@@ -56,20 +56,20 @@ func TestAESFail(t *testing.T) {
 		},
 		{
 			// empty input
-			key: stringToKey("keyyyy"),
+			key: StringToHash("keyyyy"),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		{
 			// empty input
-			key: stringToKey("fo"),
+			key: StringToHash("fo"),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		{
 			// wrong d key
-			key:  stringToKey("fo"),
-			dkey: stringToKey("foxxxx"),
+			key:  StringToHash("fo"),
+			dkey: StringToHash("foxxxx"),
 			msg:  []byte("yo hi"),
 			drr:  errors.New("fo"),
 		},

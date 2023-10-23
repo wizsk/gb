@@ -1,43 +1,33 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 )
 
 const (
 	rootDirEnvName = "GB_ROOT_DIR"
+	configFileName = "config.yml"
+	defautRoot     = "GB_ROOT_DIR"
 	encExt         = ".md.enc"
 	decExt         = ".md"
 	editor         = "nvim"
 )
 
 type Config struct {
-	RootDir string // root dir
+	RootDir string `yaml:",omitempty"` // root dir
 	encExt  string
 	decExt  string
-	Key     string
-	Editor  string
+	Key     string `yaml:"key"`
+	Editor  string `yaml:"editor"`
 }
 
-func DefaultConf() (*Config, error) {
-	var root string
-	if root = os.Getenv(rootDirEnvName); root == "" {
-		var err error
-		root, err = os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-		root = filepath.Join(root, ".gb")
+func DefaultConf() Config {
+	return Config{
+		encExt: encExt,
+		decExt: decExt,
+		Editor: editor,
+		Key:    "",
 	}
-
-	return &Config{
-		RootDir: filepath.Join(),
-		encExt:  encExt,
-		decExt:  decExt,
-		Editor:  editor,
-		Key:     "",
-	}, nil
 }
 
 func (c *Config) AddEncExt(n string) string {
