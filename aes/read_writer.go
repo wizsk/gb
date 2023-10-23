@@ -3,6 +3,7 @@ package aes
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 )
@@ -59,10 +60,40 @@ func Decrypt(input io.Reader, output io.Writer, key []byte) error {
 // return sha256sum of the string
 //
 // if the len of the string is 0 then it pannics
-func StringToHash(s string) []byte {
+// func StringToHash(s string) []byte {
+// 	if len(s) == 0 {
+// 		panic("StringToHash: input can not be empty")
+// 	}
+// 	b32 := sha256.Sum256([]byte(s))
+// 	return b32[:]
+// }
+
+// StringToHashHex takes in a stirng
+// return sha256sum of the string and retuns the hex
+//
+// if the len of the string is 0 then it pannics
+func StringToHashHex(s string) string {
 	if len(s) == 0 {
 		panic("StringToHash: input can not be empty")
 	}
+
 	b32 := sha256.Sum256([]byte(s))
-	return b32[:]
+	return hex.EncodeToString(b32[:])
+}
+
+// HexToHash takes in a stirng in hex
+// return []byte of the string
+//
+// if errs then it pannics
+func HexToHash(s string) []byte {
+	if len(s) == 0 {
+		panic("HexToHash: input can not be empty")
+	}
+
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		panic("HexToHash: " + err.Error())
+	}
+
+	return b
 }

@@ -8,14 +8,15 @@ import (
 
 func TestAESPass(t *testing.T) {
 	tests := []struct {
-		key, msg []byte
+		key string
+		msg []byte
 	}{
 		{
-			key: StringToHash("key"),
+			key: StringToHashHex("key"),
 			msg: []byte("very important msg that no one else should see"),
 		},
 		{
-			key: StringToHash("u wont ever know the keyyyy"),
+			key: StringToHashHex("u wont ever know the keyyyy"),
 			msg: []byte("very important msg that no one else should see, ya u can't"),
 		},
 	}
@@ -23,13 +24,13 @@ func TestAESPass(t *testing.T) {
 	// passing tests
 	for _, ts := range tests {
 		t.Logf("testing key: %x,\nmsg: %s", ts.key, ts.msg)
-		encrypted, err := encrypt(ts.msg, ts.key)
+		encrypted, err := encrypt(ts.msg, HexToHash(ts.key))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
 
-		decrypted, err := decrypt(encrypted, ts.key[:])
+		decrypted, err := decrypt(encrypted, HexToHash(ts.key))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -44,32 +45,32 @@ func TestAESPass(t *testing.T) {
 
 func TestAESFail(t *testing.T) {
 	tests := []struct {
-		key, dkey, msg []byte
-		err            error // encryption err
-		drr            error // decryption err
+		key, dkey string
+		msg       []byte
+		err       error // encryption err
+		drr       error // decryption err
 	}{
 		{
-			// key err
-			key: []byte{},
+			key: StringToHashHex("hhhh"),
 			msg: []byte("very important msg that no one else should see"),
 			err: errors.New("fo"),
 		},
 		{
 			// empty input
-			key: StringToHash("keyyyy"),
+			key: StringToHashHex("keyyyy"),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		{
 			// empty input
-			key: StringToHash("fo"),
+			key: StringToHashHex("fo"),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		{
 			// wrong d key
-			key:  StringToHash("fo"),
-			dkey: StringToHash("foxxxx"),
+			key:  StringToHashHex("fo"),
+			dkey: StringToHashHex("foxxxx"),
 			msg:  []byte("yo hi"),
 			drr:  errors.New("fo"),
 		},
@@ -78,7 +79,7 @@ func TestAESFail(t *testing.T) {
 	// passing tests
 	for _, ts := range tests {
 		t.Logf("testing key: %x,\nmsg: %s", ts.key, ts.msg)
-		encrypted, err := encrypt(ts.msg, ts.key)
+		encrypted, err := encrypt(ts.msg, HexToHash(ts.key))
 		// encryption should not fail
 		if ts.err == nil && err != nil {
 			t.Errorf("error '%v' was expected to be nil", err)
@@ -90,7 +91,7 @@ func TestAESFail(t *testing.T) {
 			continue
 		}
 
-		_, err = decrypt(encrypted, ts.dkey[:])
+		_, err = decrypt(encrypted, HexToHash(ts.dkey))
 		if ts.drr != nil && err == nil {
 			t.Errorf("error '%v' was expected to be non-nil", err)
 			t.FailNow()

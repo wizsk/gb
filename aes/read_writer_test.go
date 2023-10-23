@@ -9,29 +9,29 @@ import (
 
 func TestEDPass(t *testing.T) {
 	tests := []struct {
-		key []byte
+		key string
 		msg []byte
 	}{
 		{
-			key: StringToHash("key"),
+			key: StringToHashHex("key"),
 			msg: []byte("very important msg that no one else should see"),
 		},
 		{
-			key: StringToHash("u wont ever know the keyyyy"),
+			key: StringToHashHex("u wont ever know the keyyyy"),
 			msg: []byte("very important msg that no one else should see, ya u can't"),
 		},
 	}
 
 	for _, tt := range tests {
 		enc := new(bytes.Buffer)
-		err := Encrypt(bytes.NewReader(tt.msg), enc, tt.key)
+		err := Encrypt(bytes.NewReader(tt.msg), enc, HexToHash(tt.key))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
 
 		dec := new(bytes.Buffer)
-		err = Decrypt(enc, dec, tt.key)
+		err = Decrypt(enc, dec, HexToHash(tt.key))
 		if err != nil {
 			t.Error(err)
 			t.FailNow()
@@ -59,14 +59,14 @@ func TestEDFail(t *testing.T) {
 			err: errors.New("fo"),
 		},
 		{
-			key: StringToHash("u wont ever know the keyyyy"),
+			key: HexToHash(StringToHashHex("u wont ever know the keyyyy")),
 			msg: []byte{},
 			err: errors.New("fo"),
 		},
 		// decription err
 		{
-			key:  StringToHash("yo"),
-			dkey: StringToHash("yoxxx"),
+			key:  HexToHash(StringToHashHex("u wont ever know the keyyyy")),
+			dkey: HexToHash(StringToHashHex("wrong key")),
 			msg:  []byte("very important msg that no one else should see"),
 			drr:  errors.New("fo"),
 		},
