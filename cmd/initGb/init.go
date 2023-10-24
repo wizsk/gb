@@ -12,8 +12,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const defatutNoteBook = "default"
-
 func InitGb() *cobra.Command {
 	i := &cobra.Command{
 		Use:   "init",
@@ -62,14 +60,21 @@ func initGB(force bool, getPass func() (string, error)) error {
 	} else if pass == "" {
 		return fmt.Errorf("password can not be empty")
 	}
-	conf.Key = aes.StringToHashHex(pass)
+
+	if err = os.WriteFile(filepath.Join(root, config.KeyFileName), []byte(aes.StringToHashHex(pass)), 0666); err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(filepath.Join(root, ".gitignore"), []byte(config.KeyFileName+"\n"), 0666); err != nil {
+		return err
+	}
 
 	confYml, err := yaml.Marshal(&conf)
 	if err != nil {
 		return err
 	}
 
-	if err = os.Mkdir(filepath.Join(root, defatutNoteBook), os.ModePerm); err != nil && !os.IsExist(err) {
+	if err = os.Mkdir(filepath.Join(root, conf.DefaltNoteBook), os.ModePerm); err != nil && !os.IsExist(err) {
 		return err
 	}
 

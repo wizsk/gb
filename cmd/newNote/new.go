@@ -1,14 +1,14 @@
 package newNote
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/wizsk/gb/config"
 	"github.com/wizsk/gb/core"
 )
 
-func Create(c *config.Config, tmpfile *string) *cobra.Command {
+func Create() *cobra.Command {
 	n := &cobra.Command{
 		Use:   "new",
 		Short: "create a new note",
@@ -18,12 +18,19 @@ func Create(c *config.Config, tmpfile *string) *cobra.Command {
 	n.Flags().StringVarP(&fileName, "name", "n", "", "name of the new note")
 
 	n.RunE = func(cmd *cobra.Command, args []string) error {
+		conf, err := config.Readconf()
+		if err != nil {
+			return err
+		}
 		if fileName == "" && len(args) == 1 {
 			fileName = args[0]
 		}
-		fmt.Println(fileName)
 
-		return core.CreateNewFile(c, fileName, tmpfile)
+		if fileName == "" {
+			fileName = time.Now().Format("02-01-06_03-04-05-PM")
+		}
+
+		return core.NewNote(conf, fileName)
 	}
 
 	return n

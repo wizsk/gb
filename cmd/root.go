@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/wizsk/gb/cmd/initGb"
+	"github.com/wizsk/gb/cmd/newNote"
 )
 
 func RootCmd(tmpfile *string) (*cobra.Command, error) {
@@ -19,6 +20,7 @@ lot of sufffff`,
 	}
 
 	cmd.AddCommand(initGb.InitGb())
+	cmd.AddCommand(newNote.Create())
 
 	return cmd, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,6 +34,11 @@ func Readconf() (*Config, error) {
 	if err = yaml.Unmarshal(confFile, &conf); err != nil {
 		return nil, err
 	}
+	conf.RootDir = root
+
+	if conf.Key, err = getKey(root); err != nil {
+		return nil, err
+	}
 
 	return &conf, nil
 }
@@ -49,4 +55,13 @@ func RootDir() (string, error) {
 		root = filepath.Join(root, ".gb")
 	}
 	return root, nil
+}
+
+func getKey(root string) (string, error) {
+	key, err := os.ReadFile(filepath.Join(root, KeyFileName))
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(key)), nil
 }
