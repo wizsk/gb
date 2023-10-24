@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/wizsk/gb/cmd/newNote"
-	"github.com/wizsk/gb/config"
+	"github.com/wizsk/gb/cmd/initGb"
 )
 
 func RootCmd(tmpfile *string) (*cobra.Command, error) {
@@ -19,12 +18,7 @@ lot of sufffff`,
 		},
 	}
 
-	cnf, err := config.DefaultConf()
-	if err != nil {
-		return nil, err
-	}
-
-	cmd.AddCommand(newNote.Create(cnf, tmpfile))
+	cmd.AddCommand(initGb.InitGb())
 
 	return cmd, nil
 }

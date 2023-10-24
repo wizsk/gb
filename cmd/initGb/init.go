@@ -1,10 +1,11 @@
-package init
+package initGb
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
 	"github.com/wizsk/gb/aes"
 	"github.com/wizsk/gb/config"
 	"golang.org/x/term"
@@ -13,10 +14,24 @@ import (
 
 const defatutNoteBook = "default"
 
-// Init(nil) is the way to call
-//
-// the func is for testing
-func Init(force bool, getPass func() (string, error)) error {
+func InitGb() *cobra.Command {
+	i := &cobra.Command{
+		Use:   "init",
+		Short: "initialize gb",
+	}
+
+	var force bool
+	i.Flags().BoolVarP(&force, "force", "f", false, "delete the old config and create a new one")
+
+	i.RunE = func(cmd *cobra.Command, args []string) error {
+		return initGB(force, getPassword)
+	}
+
+	return i
+}
+
+// if force == true then the previous confing will be rewritten
+func initGB(force bool, getPass func() (string, error)) error {
 	root, err := config.RootDir()
 	if err != nil {
 		return err
@@ -41,10 +56,6 @@ func Init(force bool, getPass func() (string, error)) error {
 
 	conf := config.DefaultConf()
 
-	if getPass == nil {
-		getPass = getPassword
-	}
-
 	pass, err := getPass()
 	if err != nil {
 		return err
@@ -62,9 +73,9 @@ func Init(force bool, getPass func() (string, error)) error {
 		return err
 	}
 
-	fmt.Println(string(confYml))
-	err = os.WriteFile(configFile, confYml, 0666)
-	return nil
+	fmt.Printf("\n%s\nwas written to %q\n", confYml, configFile)
+
+	return os.WriteFile(configFile, confYml, 0666)
 }
 
 func getPassword() (string, error) {

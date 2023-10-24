@@ -1,4 +1,4 @@
-package init
+package initGb
 
 import (
 	"os"
@@ -8,12 +8,13 @@ import (
 )
 
 func TestInit(t *testing.T) {
+	os.RemoveAll("./tmp")
 	os.Setenv(config.RootDirEnvName, "./tmp")
 	getP := func() (string, error) {
 		return "hi there", nil
 	}
 
-	if err := Init(false, getP); err != nil {
+	if err := initGB(true, getP); err != nil {
 		t.Error(err)
 		t.FailNow()
 	}

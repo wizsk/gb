@@ -6,7 +6,7 @@ Disclaimer I'm not any expert in any of this. I'm making for my own use.
 
 # TO-DO
 
-- [ ] `init` command.
+- [x] `init` command.
 - [ ] `new` command.
 - [ ] `edit` command.
 - [ ] find more things
