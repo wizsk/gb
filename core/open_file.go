@@ -1,30 +1,35 @@
 package core
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
-	"os/exec"
 
 	"github.com/wizsk/gb/aes"
 	"github.com/wizsk/gb/config"
 )
 
-const (
-	readWritePermission = 0666
-)
-
 // filename should be the base file name. Like: "fo" nor "fo.md.enc"
 func OpenFile(c *config.Config, fileName string) error {
-	return open(os.ReadFile, os.WriteFile, os.Remove, openEditor, c, fileName)
+	return open(c, fileName, os.ReadFile, os.WriteFile, os.Stat, os.Remove, openEditor)
 }
 
-func open(reader func(string) ([]byte, error),
+func open(conf *config.Config, fileName string,
+	reader func(string) ([]byte, error),
 	writer func(string, []byte, os.FileMode) error,
+	stat func(string) (fs.FileInfo, error),
 	remove func(string) error,
 	oedit func(string, string) error, // open editor
-	conf *config.Config, fileName string) error {
+) error {
 
 	encFile := conf.FullEncFilePath(fileName)
 	decFile := conf.FullDecFilePath(fileName)
+
+	if _, err := stat(decFile); err != nil && !os.IsNotExist(err) {
+		return err
+	} else if err == nil {
+		return fmt.Errorf("open: %q already opened", fileName)
+	}
 
 	// read the enc
 	encData, err := reader(encFile)
@@ -41,7 +46,7 @@ func open(reader func(string) ([]byte, error),
 	if err = writer(decFile, decData, readWritePermission); err != nil {
 		return err
 	}
-	defer remove(decFile) // clean the file
+	defer clean(remove, decFile) // clean the file
 
 	if err = oedit(decFile, conf.Editor); err != nil {
 		return err
@@ -64,10 +69,8 @@ func open(reader func(string) ([]byte, error),
 	return nil
 }
 
-func openEditor(file, editor string) error {
-	cmd := exec.Command(editor, file)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+func clean(remove func(string) error, file string) {
+	if err := remove(file); err != nil {
+		fmt.Printf("ERROR: while removing %q\nPLEASE REMOVE THE FILE MANUALLY OTHERWISE IT MAY CASE DATA LEAK!", file)
+	}
 }

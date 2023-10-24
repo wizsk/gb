@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"os"
 	"reflect"
 	"testing"
@@ -23,7 +24,7 @@ func TestOpen(t *testing.T) {
 	mc.WriteString("this is some note\n")
 
 	fl := new(bytes.Buffer)
-	e, err := aes.Enc([]byte(mc.String()), aes.HexToHash(conf.Key))
+	e, err := aes.Enc(mc.Bytes(), aes.HexToHash(conf.Key))
 	IsNil(t, err)
 	fl.Write(e)
 
@@ -32,6 +33,8 @@ func TestOpen(t *testing.T) {
 	// read decFile
 	// enctypt and wirte to encFile
 	err = open(
+		&conf,
+		fileName,
 		// read
 		func(s string) ([]byte, error) {
 			if s == encFile {
@@ -52,6 +55,10 @@ func TestOpen(t *testing.T) {
 			}
 			return fmt.Errorf("unexpected %q filename", s)
 		},
+		// stat
+		func(s string) (fs.FileInfo, error) {
+			return nil, os.ErrNotExist
+		},
 		// remove
 		func(s string) error {
 			return nil
@@ -61,9 +68,8 @@ func TestOpen(t *testing.T) {
 			mc.WriteString("fo is not good brah\n")
 			return nil
 		},
-		&conf,
-		fileName,
 	)
+	IsNil(t, err)
 
 	d, _ := aes.Dec(fl.Bytes(), aes.HexToHash(conf.Key))
 	if !reflect.DeepEqual(d, mc.Bytes()) {
