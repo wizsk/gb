@@ -7,10 +7,10 @@ import (
 const (
 	ConfigFileName = "config.yml"
 	RootDirEnvName = "GB_ROOT_DIR"
+	EncExt         = ".md.enc"
+	DecExt         = ".md"
 
-	encExt         = ".md.enc"
-	decExt         = ".md"
-	editor         = "nvim"
+	editor = "nvim"
 )
 
 type Config struct {
@@ -23,8 +23,8 @@ type Config struct {
 
 func DefaultConf() Config {
 	return Config{
-		encExt: encExt,
-		decExt: decExt,
+		encExt: EncExt,
+		decExt: DecExt,
 		Editor: editor,
 	}
 }
@@ -35,5 +35,10 @@ func (c *Config) AddEncExt(n string) string {
 
 // adds c.encExt with the name
 func (c *Config) FullEncFilePath(n string) string {
-	return filepath.Join(c.RootDir, c.AddEncExt(n))
+	return filepath.Join(c.RootDir, n+c.encExt)
+}
+
+// adds c.encExt with the name
+func (c *Config) FullDecFilePath(n string) string {
+	return filepath.Join(c.RootDir, n+c.decExt)
 }
