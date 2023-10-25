@@ -13,7 +13,7 @@ Disclaimer I'm not any expert in any of this. I'm making for my own use.
 - [ ] `edit` command.
 - [ ] find more things
 
-# Eample
+# Example
 
 ```bash
 
