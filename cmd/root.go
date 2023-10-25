@@ -7,7 +7,7 @@ import (
 	"github.com/wizsk/gb/cmd/open"
 )
 
-func RootCmd(tmpfile *string) (*cobra.Command, error) {
+func RootCmd() (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:   "gb",
 		Short: "gb is notetaking cli app",

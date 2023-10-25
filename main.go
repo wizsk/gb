@@ -13,11 +13,12 @@ const debug = true
 
 func main() {
 	if debug {
-		os.Setenv(config.RootDirEnvName, "./tmp")
+		r := "./tmp"
+		fmt.Printf("INFO: running in debug mode %q was set to %q\n", config.RootDirEnvName, r)
+		os.Setenv(config.RootDirEnvName, r)
 	}
 
-	tmpfile := ""
-	root, err := cmd.RootCmd(&tmpfile)
+	root, err := cmd.RootCmd()
 
 	if err != nil {
 		fmt.Println(err)
