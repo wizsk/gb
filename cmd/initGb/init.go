@@ -1,9 +1,11 @@
 package initGb
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/wizsk/gb/aes"
@@ -38,6 +40,33 @@ func initGB(force bool, getPass func() (string, error)) error {
 	// check if the file exists or not
 	if _, err := os.Stat(root); err != nil && !os.IsNotExist(err) {
 		return err
+	}
+
+	if force {
+		reader := bufio.NewReader(os.Stdin)
+
+		for {
+			fmt.Print("Do you really want to delete all your notes? [y/N] ")
+			input, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+
+			// Remove the newline character at the end of the input
+			input = strings.TrimSuffix(input, "\n")
+			input = strings.ToLower(input)
+			fmt.Println()
+
+			if input == "yes" || input == "y" {
+				if err := os.RemoveAll(root); err != nil && !os.IsNotExist(err) {
+					return err
+				}
+				break
+			} else if input == "" || input == "no" || input == "n" {
+				fmt.Println("No note was deleted")
+				return nil
+			}
+		}
 	}
 
 	err = os.Mkdir(root, os.ModePerm)
@@ -84,7 +113,7 @@ func initGB(force bool, getPass func() (string, error)) error {
 }
 
 func getPassword() (string, error) {
-	fmt.Println("Bear in mind that you will never be able to change the pass :) so give a strong one")
+	fmt.Println("There isn't any way to change the password for now. So give a strong one")
 	fmt.Print("Enter the password: ")
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
