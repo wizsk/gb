@@ -11,7 +11,7 @@ const (
 	EncExt          = ".md.enc"
 	DecExt          = ".md"
 	KeyFileName     = ".key"
-	defatutNoteBook = "default"
+	DefatutNoteBook = "default"
 
 	editor = "nvim"
 )
@@ -29,7 +29,7 @@ func DefaultConf() Config {
 	return Config{
 		encExt:         EncExt,
 		decExt:         DecExt,
-		DefaltNoteBook: defatutNoteBook,
+		DefaltNoteBook: DefatutNoteBook,
 		Editor:         editor,
 	}
 }

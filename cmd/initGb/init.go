@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wizsk/gb/aes"
 	"github.com/wizsk/gb/config"
+	"github.com/wizsk/gb/core"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
 )
@@ -90,22 +91,33 @@ func initGB(force bool, getPass func() (string, error)) error {
 		return fmt.Errorf("password can not be empty")
 	}
 
-	if err = os.WriteFile(filepath.Join(root, config.KeyFileName), []byte(aes.StringToHashHex(pass)), 0666); err != nil {
+	keyFile := filepath.Join(root, config.KeyFileName)
+	if err = os.WriteFile(keyFile, []byte(aes.StringToHashHex(pass)), 0666); err != nil {
 		return err
 	}
+	fmt.Printf("Key written to %q\n", keyFile)
 
 	if err = os.WriteFile(filepath.Join(root, ".gitignore"), []byte(config.KeyFileName+"\n"), 0666); err != nil {
 		return err
 	}
+	fmt.Printf(".gitignore written to %q\n", filepath.Join(root, ".gitignore"))
 
 	confYml, err := yaml.Marshal(&conf)
 	if err != nil {
 		return err
 	}
 
-	if err = os.Mkdir(filepath.Join(root, conf.DefaltNoteBook), os.ModePerm); err != nil && !os.IsExist(err) {
+	noteBook := filepath.Join(root, conf.DefaltNoteBook)
+	if err = os.Mkdir(noteBook, os.ModePerm); err != nil && !os.IsExist(err) {
 		return err
 	}
+	fmt.Printf("default notebook created at %q\n", noteBook)
+
+	db := core.NotesDb{}
+	if err = db.WriteJson(root, conf.DefaltNoteBook); err != nil {
+		return err
+	}
+	fmt.Printf("db for %q created\n", noteBook)
 
 	fmt.Printf("\n%s\nwas written to %q\n", confYml, configFile)
 

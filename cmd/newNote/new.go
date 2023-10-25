@@ -30,7 +30,18 @@ func Create() *cobra.Command {
 			fileName = time.Now().Format("02-01-06_03-04-05-PM")
 		}
 
-		return core.NewNote(conf, fileName)
+		err = core.NewNote(conf, fileName)
+		if err != nil {
+			return err
+		}
+
+		db, err := core.GetDefautNotebookDb(conf)
+		if err != nil {
+			return err
+		}
+
+		db.Notes = append(db.Notes, core.Note{Name: fileName, Created: time.Now(), LastModified: time.Now()})
+		return db.WriteJson(conf.RootDir, conf.DefaltNoteBook)
 	}
 
 	return n

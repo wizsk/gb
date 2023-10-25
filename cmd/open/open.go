@@ -1,6 +1,7 @@
 package open
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -20,6 +21,10 @@ func Open() *cobra.Command {
 	c.Flags().IntVarP(&index, "index", "i", -1, "index of the note")
 
 	c.RunE = func(_ *cobra.Command, args []string) error {
+		if name != "" && index != -1 {
+			return fmt.Errorf("cannot use both -n and -i flags as the same time")
+		}
+
 		var err error
 		if name == "" && len(args) == 1 {
 			if index, err = strconv.Atoi(args[0]); err != nil {
@@ -37,7 +42,16 @@ func Open() *cobra.Command {
 			return err
 		}
 
-		return core.OpenFile(conf, name)
+		err = core.OpenFile(conf, name)
+		if err != nil {
+			return err
+		}
+
+		db, err := core.GetDefautNotebookDb(conf)
+		if err != nil {
+			return err
+		}
+		return db.UpdateLastModified(conf, name)
 	}
 
 	return c
