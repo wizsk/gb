@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"time"
 
 	"github.com/wizsk/gb/aes"
 	"github.com/wizsk/gb/config"
 )
 
-// filename should be the base file name. Like: "fo" nor "fo.md.enc"
+// filename should be the base file name. Like: "fo" not "fo.md.enc"
 func OpenFile(c *config.Config, fileName string) error {
 	return open(c, fileName, os.ReadFile, os.WriteFile, os.Stat, os.Remove, openEditor)
 }
@@ -48,9 +49,33 @@ func open(conf *config.Config, fileName string,
 	}
 	defer clean(remove, decFile) // clean the file
 
+	done := make(chan struct{})
+	go func(done <-chan struct{}) {
+		tick := time.NewTicker(time.Second)
+		var modTime time.Time
+
+		for {
+			select {
+			case <-done:
+				return
+			case <-tick.C:
+				// file mod time changed sooo file changed.
+				if stat, err := os.Stat(decFile); err == nil && stat.ModTime() != modTime {
+					data, _ := reader(decFile)
+					data, _ = aes.Enc(data, aes.HexToHash(conf.Key))
+					_ = writer(encFile, data, readWritePermission)
+					modTime = stat.ModTime()
+				}
+			}
+		}
+	}(done)
+
 	if err = oedit(decFile, conf.Editor); err != nil {
 		return err
 	}
+
+	// after editing is done the go routine func shoudl stop
+	done <- struct{}{}
 
 	ChangedDecData, err := reader(decFile)
 	if err != nil {
