@@ -97,9 +97,23 @@ func saveWhileEditing(stat fileStat, reader fileReader, writer fileWriter, done 
 					continue
 				}
 
-				data, _ := reader(decFile)
-				data, _ = aes.Enc(data, key)
-				_ = writer(encFile, data, readWritePermission)
+				data, err := reader(decFile)
+				if len(data) == 0 {
+					continue
+				}
+				if err != nil {
+					// TODO: need to handle it
+					continue
+				}
+				data, err = aes.Enc(data, key)
+				if err != nil {
+					// TODO: need to handle it
+					continue
+				}
+				err = writer(encFile, data, readWritePermission)
+				if err != nil {
+					// TODO: need to handle it
+				}
 			}
 		}
 	}
