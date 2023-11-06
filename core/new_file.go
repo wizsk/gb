@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 
 	"github.com/wizsk/gb/aes"
@@ -14,12 +13,11 @@ func NewNote(conf *config.Config, fileName string) error {
 }
 
 func newNote(conf *config.Config, fileName string,
-	reader func(string) ([]byte, error),
-	writer func(string, []byte, os.FileMode) error,
-	stat func(string) (fs.FileInfo, error),
-	remove func(string) error,
-	oedit func(string, string) error, // open editor
-
+	reader fileReader,
+	writer fileWriter,
+	stat fileStat,
+	remove fileRemove,
+	oedit editorOpener,
 ) error {
 	decFile := conf.FullDecFilePath(fileName)
 	encFile := conf.FullEncFilePath(fileName)
@@ -36,11 +34,15 @@ func newNote(conf *config.Config, fileName string,
 		return fmt.Errorf("newNote: %q already opened", fileName)
 	}
 
+	done := make(chan struct{})
+	go saveWhileEditing(stat, reader, writer, done, encFile, decFile, aes.HexToHash(conf.Key))
+
 	// editor can create the file
 	if err := oedit(decFile, conf.Editor); err != nil {
 		return err
 	}
 	defer clean(remove, decFile)
+	done <- struct{}{} // done
 
 	decData, err := reader(decFile)
 	if err != nil {

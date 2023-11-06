@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"time"
 
@@ -16,11 +15,11 @@ func OpenFile(c *config.Config, fileName string) error {
 }
 
 func open(conf *config.Config, fileName string,
-	reader func(string) ([]byte, error),
-	writer func(string, []byte, os.FileMode) error,
-	stat func(string) (fs.FileInfo, error),
-	remove func(string) error,
-	oedit func(string, string) error, // open editor
+	reader fileReader,
+	writer fileWriter,
+	stat fileStat,
+	remove fileRemove,
+	oedit editorOpener,
 ) error {
 
 	encFile := conf.FullEncFilePath(fileName)
@@ -50,25 +49,7 @@ func open(conf *config.Config, fileName string,
 	defer clean(remove, decFile) // clean the file
 
 	done := make(chan struct{})
-	go func(done <-chan struct{}) {
-		tick := time.NewTicker(time.Second)
-		var modTime time.Time
-
-		for {
-			select {
-			case <-done:
-				return
-			case <-tick.C:
-				// file mod time changed sooo file changed.
-				if stat, err := os.Stat(decFile); err == nil && stat.ModTime() != modTime {
-					data, _ := reader(decFile)
-					data, _ = aes.Enc(data, aes.HexToHash(conf.Key))
-					_ = writer(encFile, data, readWritePermission)
-					modTime = stat.ModTime()
-				}
-			}
-		}
-	}(done)
+	go saveWhileEditing(stat, reader, writer, done, encFile, decFile, aes.HexToHash(conf.Key))
 
 	if err = oedit(decFile, conf.Editor); err != nil {
 		return err
@@ -97,5 +78,29 @@ func open(conf *config.Config, fileName string,
 func clean(remove func(string) error, file string) {
 	if err := remove(file); err != nil {
 		fmt.Printf("ERROR: while removing %q\nPLEASE REMOVE THE FILE MANUALLY OTHERWISE IT MAY CASE DATA LEAK!", file)
+	}
+}
+
+func saveWhileEditing(stat fileStat, reader fileReader, writer fileWriter, done <-chan struct{}, encFile, decFile string, key []byte) {
+	tick := time.NewTicker(time.Second)
+	var modTime time.Time
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-tick.C:
+			// file mod time changed sooo file changed.
+			if stat, err := stat(decFile); err == nil && stat.ModTime() != modTime {
+				modTime = stat.ModTime()
+				if stat.Size() == 0 {
+					continue
+				}
+
+				data, _ := reader(decFile)
+				data, _ = aes.Enc(data, key)
+				_ = writer(encFile, data, readWritePermission)
+			}
+		}
 	}
 }

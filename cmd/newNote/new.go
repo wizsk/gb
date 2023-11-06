@@ -27,7 +27,7 @@ func Create() *cobra.Command {
 		}
 
 		if fileName == "" {
-			fileName = time.Now().Format("02-01-06_03-04-05-PM")
+			fileName = time.Now().Format("03-04-05-PM_02-01-06")
 		}
 
 		err = core.NewNote(conf, fileName)
