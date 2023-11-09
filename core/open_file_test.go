@@ -6,10 +6,26 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/wizsk/gb/aes"
 	"github.com/wizsk/gb/config"
 )
+
+type file struct {
+	data *bytes.Buffer
+	last time.Time
+}
+
+var _ fileInfo = &file{} // checking if it satisfies the interface
+
+func (f *file) ModTime() time.Time {
+	return f.last
+}
+
+func (f *file) Size() int64 {
+	return int64(f.data.Len())
+}
 
 func TestOpen(t *testing.T) {
 	conf := config.DefaultConf()
@@ -26,21 +42,18 @@ func TestOpen(t *testing.T) {
 
 	//  file
 	// encrypted
-	fl := new(bytes.Buffer)
-	e, err := aes.Enc(mc.Bytes(), aes.HexToHash(conf.Key))
-	IsNil(t, err)
-	fl.Write(e) // writing suff
+	var fl *file = nil
 
 	// read encFile
 	// decryt and wirte to decfile
 	// read decFile
 	// enctypt and wirte to encFile
-	err = open(
+	err := open(
 		&conf, fileName,
 		// read
 		func(s string) ([]byte, error) {
 			if s == encFile {
-				return fl.Bytes(), nil
+				return fl.data.Bytes(), nil
 			} else if s == decFile {
 				return mc.Bytes(), nil
 			}
@@ -49,8 +62,16 @@ func TestOpen(t *testing.T) {
 		// write
 		func(s string, b []byte, fm os.FileMode) error {
 			if s == encFile {
-				fl.Truncate(0)
-				_, err := fl.Write(b)
+				if fl == nil {
+					fl = &file{
+						data: new(bytes.Buffer),
+						last: time.Now(),
+					}
+				}
+
+				fl.data.Truncate(0)
+				_, err := fl.data.Write(b)
+				fl.last = time.Now()
 				return err
 			} else if s == decFile {
 				return nil
@@ -59,7 +80,12 @@ func TestOpen(t *testing.T) {
 		},
 		// stat
 		func(s string) (fileInfo, error) {
-			return nil, os.ErrNotExist
+			if s == decFile {
+				if fl == nil {
+					return nil, os.ErrNotExist
+				}
+			}
+			return nil, nil
 		},
 		// remove
 		func(s string) error {
@@ -74,7 +100,7 @@ func TestOpen(t *testing.T) {
 
 	IsNil(t, err)
 
-	d, _ := aes.Dec(fl.Bytes(), aes.HexToHash(conf.Key))
+	d, _ := aes.Dec(fl.data.Bytes(), aes.HexToHash(conf.Key))
 	if !reflect.DeepEqual(d, mc.Bytes()) {
 		t.Error("file corrupted")
 		t.FailNow()
