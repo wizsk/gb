@@ -9,7 +9,7 @@ import (
 )
 
 func NewNote(conf *config.Config, fileName string) error {
-	return newNote(conf, fileName, os.ReadFile, os.WriteFile, os.Stat, os.Remove, openEditor)
+	return newNote(conf, fileName, os.ReadFile, os.WriteFile, func(name string) (fileInfo, error) { return os.Stat(name) }, os.Remove, openEditor)
 }
 
 func newNote(conf *config.Config, fileName string,

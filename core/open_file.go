@@ -11,7 +11,7 @@ import (
 
 // filename should be the base file name. Like: "fo" not "fo.md.enc"
 func OpenFile(c *config.Config, fileName string) error {
-	return open(c, fileName, os.ReadFile, os.WriteFile, os.Stat, os.Remove, openEditor)
+	return open(c, fileName, os.ReadFile, os.WriteFile, func(name string) (fileInfo, error) { return os.Stat(name) }, os.Remove, openEditor)
 }
 
 func open(conf *config.Config, fileName string,

@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"io/fs"
 	"os"
 	"reflect"
 	"testing"
@@ -20,21 +19,24 @@ func TestOpen(t *testing.T) {
 	encFile := conf.FullEncFilePath(fileName)
 	decFile := conf.FullDecFilePath(fileName)
 
+	// main content
+	// unencrypted
 	mc := new(bytes.Buffer)
 	mc.WriteString("this is some note\n")
 
+	//  file
+	// encrypted
 	fl := new(bytes.Buffer)
 	e, err := aes.Enc(mc.Bytes(), aes.HexToHash(conf.Key))
 	IsNil(t, err)
-	fl.Write(e)
+	fl.Write(e) // writing suff
 
 	// read encFile
 	// decryt and wirte to decfile
 	// read decFile
 	// enctypt and wirte to encFile
 	err = open(
-		&conf,
-		fileName,
+		&conf, fileName,
 		// read
 		func(s string) ([]byte, error) {
 			if s == encFile {
@@ -56,7 +58,7 @@ func TestOpen(t *testing.T) {
 			return fmt.Errorf("unexpected %q filename", s)
 		},
 		// stat
-		func(s string) (fs.FileInfo, error) {
+		func(s string) (fileInfo, error) {
 			return nil, os.ErrNotExist
 		},
 		// remove
@@ -69,6 +71,7 @@ func TestOpen(t *testing.T) {
 			return nil
 		},
 	)
+
 	IsNil(t, err)
 
 	d, _ := aes.Dec(fl.Bytes(), aes.HexToHash(conf.Key))
