@@ -37,43 +37,43 @@ func TestOpen(t *testing.T) {
 
 	// main content
 	// unencrypted
-	mc := new(bytes.Buffer)
-	mc.WriteString("this is some note\n")
+	// dec := &file{new(bytes.Buffer), time.Now()}
+	var dec *file = nil
+	// dec.WriteString("this is some note\n")
 
 	//  file
-	// encrypted
-	var fl *file = nil
+	// encrypted file should have something in
+	// it for usually.
+	var fl *file = &file{new(bytes.Buffer), time.Now()}
+	d, err := aes.Enc([]byte("some abbettry datas"), aes.HexToHash(conf.Key))
+	IsNil(t, err)
+	fl.data.Write(d)
 
 	// read encFile
 	// decryt and wirte to decfile
 	// read decFile
 	// enctypt and wirte to encFile
-	err := open(
+	err = open(
 		&conf, fileName,
 		// read
 		func(s string) ([]byte, error) {
 			if s == encFile {
 				return fl.data.Bytes(), nil
 			} else if s == decFile {
-				return mc.Bytes(), nil
+				return dec.data.Bytes(), nil
 			}
 			return nil, fmt.Errorf("unexpected %q filename", s)
 		},
+
 		// write
 		func(s string, b []byte, fm os.FileMode) error {
 			if s == encFile {
-				if fl == nil {
-					fl = &file{
-						data: new(bytes.Buffer),
-						last: time.Now(),
-					}
-				}
-
 				fl.data.Truncate(0)
-				_, err := fl.data.Write(b)
 				fl.last = time.Now()
+				_, err := fl.data.Write(b)
 				return err
 			} else if s == decFile {
+				// this should be called be
 				return nil
 			}
 			return fmt.Errorf("unexpected %q filename", s)
@@ -81,9 +81,10 @@ func TestOpen(t *testing.T) {
 		// stat
 		func(s string) (fileInfo, error) {
 			if s == decFile {
-				if fl == nil {
+				if dec == nil {
 					return nil, os.ErrNotExist
 				}
+				return dec, nil
 			}
 			return nil, nil
 		},
@@ -93,15 +94,21 @@ func TestOpen(t *testing.T) {
 		},
 		// edit
 		func(_, editor string) error {
-			mc.WriteString("fo is not good brah\n")
-			return nil
+			// creaing the file
+			if dec == nil {
+				dec = &file{new(bytes.Buffer), time.Now()}
+			}
+			dec.last = time.Now()
+			_, err := dec.data.WriteString("fo is not good brah\n")
+			return err
+
 		},
 	)
 
 	IsNil(t, err)
 
-	d, _ := aes.Dec(fl.data.Bytes(), aes.HexToHash(conf.Key))
-	if !reflect.DeepEqual(d, mc.Bytes()) {
+	d, _ = aes.Dec(fl.data.Bytes(), aes.HexToHash(conf.Key))
+	if !reflect.DeepEqual(d, dec.data.Bytes()) {
 		t.Error("file corrupted")
 		t.FailNow()
 	}
